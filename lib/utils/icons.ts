@@ -1,0 +1,57 @@
+import {
+  LayoutDashboard,
+  Package,
+  Calendar,
+  Zap,
+  TrendingUp,
+  Box,
+  Layers,
+  RefreshCw,
+  Move,
+  Database,
+  BarChart3,
+  Download,
+  Factory,
+  ClipboardList,
+  Send,
+  ShieldCheck,
+  Wallet,
+  Gauge,
+  Scissors,
+  Printer,
+  Droplets,
+  Monitor,
+  Settings,
+  type LucideIcon,
+} from 'lucide-react';
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  Package,
+  Calendar,
+  Zap,
+  TrendingUp,
+  Box,
+  Layers,
+  RefreshCw,
+  Move,
+  Database,
+  BarChart3,
+  Download,
+  Factory,
+  ClipboardList,
+  Send,
+  ShieldCheck,
+  Wallet,
+  Gauge,
+  Scissors,
+  Printer,
+  Droplets,
+  Monitor,
+  Settings,
+};
+
+export function getIcon(iconName?: string): LucideIcon | null {
+  if (!iconName) return null;
+  return ICON_MAP[iconName] || null;
+}
