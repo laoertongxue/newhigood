@@ -1,148 +1,331 @@
 'use client';
 
-import { Loader } from 'lucide-react';
-import { useFcsProgress } from '@/lib/hooks/useFcsResources';
+import { useRouter } from 'next/navigation';
 
-const qualityRows = [
-  { id: 'QC-202604-001', order: 'PO-202604-120', result: '合格', liability: '已确认' },
-  { id: 'QC-202604-002', order: 'PO-202604-118', result: '不合格', liability: '争议中' },
-  { id: 'QC-202604-003', order: 'PO-202604-116', result: '合格', liability: '草稿' },
+// Mock 数据
+const processTasks = [
+  { taskId: 'TASK-001', productionOrderId: 'PO-2024-001', status: 'BLOCKED', blockReason: 'ALLOCATION_GATE', blockNoteZh: '配货开始条件未满足', updatedAt: '2024-01-15 14:30', createdAt: '2024-01-15 09:00' },
+  { taskId: 'TASK-002', productionOrderId: 'PO-2024-002', status: 'IN_PROGRESS', updatedAt: '2024-01-15 16:00', createdAt: '2024-01-15 10:00' },
+  { taskId: 'TASK-003', productionOrderId: 'PO-2024-003', status: 'COMPLETED', updatedAt: '2024-01-15 17:00', createdAt: '2024-01-14 08:00' },
 ];
 
-const settlementRows = [
-  { id: 'STM-202604-011', type: '对账单', amount: '¥86,200', status: '草稿' },
-  { id: 'BAT-202604-003', type: '预付款批次', amount: '¥35,000', status: '处理中' },
-  { id: 'STM-202604-009', type: '对账单', amount: '¥61,400', status: '已确认' },
+const legacyLikeQualityInspections = [
+  { qcId: 'QC-001', productionOrderId: 'PO-2024-001', status: 'SUBMITTED', result: 'FAIL', liabilityStatus: 'DRAFT', updatedAt: '2024-01-15 15:00', createdAt: '2024-01-15 14:00' },
+  { qcId: 'QC-002', productionOrderId: 'PO-2024-002', status: 'SUBMITTED', result: 'PASS', liabilityStatus: 'CONFIRMED', updatedAt: '2024-01-15 14:00', createdAt: '2024-01-15 13:00' },
+  { qcId: 'QC-003', productionOrderId: 'PO-2024-003', status: 'CLOSED', result: 'PASS', liabilityStatus: null, updatedAt: '2024-01-14 17:00', createdAt: '2024-01-14 16:00' },
+  { qcId: 'QC-004', productionOrderId: 'PO-2024-004', status: 'SUBMITTED', result: 'FAIL', liabilityStatus: 'DISPUTED', updatedAt: '2024-01-15 11:00', createdAt: '2024-01-15 10:00' },
+  { qcId: 'QC-005', productionOrderId: 'PO-2024-005', status: 'SUBMITTED', result: 'PASS', liabilityStatus: 'CONFIRMED', updatedAt: '2024-01-15 09:00', createdAt: '2024-01-15 08:00' },
 ];
+
+const legacyLikeDeductionBasisItems = [
+  { basisId: 'BASIS-001', settlementPartyId: 'FACTORY-001', settlementReady: true, status: 'CONFIRMED', updatedAt: '2024-01-15 16:00', createdAt: '2024-01-15 15:00' },
+  { basisId: 'BASIS-002', settlementPartyId: 'FACTORY-002', settlementReady: false, status: 'DRAFT', updatedAt: '2024-01-15 14:00', createdAt: '2024-01-15 13:00' },
+  { basisId: 'BASIS-003', settlementPartyId: 'FACTORY-001', settlementReady: true, status: 'DISPUTED', updatedAt: '2024-01-15 12:00', createdAt: '2024-01-15 11:00' },
+];
+
+const initialStatementDrafts = [
+  { statementId: 'STMT-001', totalAmount: 15000, status: 'DRAFT', itemBasisIds: ['BASIS-001'], updatedAt: '2024-01-15 17:00', createdAt: '2024-01-15 16:00' },
+  { statementId: 'STMT-002', totalAmount: 28000, status: 'CONFIRMED', itemBasisIds: [], updatedAt: '2024-01-15 14:00', createdAt: '2024-01-14 10:00' },
+  { statementId: 'STMT-003', totalAmount: 9500, status: 'CLOSED', itemBasisIds: [], updatedAt: '2024-01-14 18:00', createdAt: '2024-01-14 09:00' },
+];
+
+const initialSettlementBatches = [
+  { batchId: 'BATCH-001', totalAmount: 50000, status: 'PROCESSING', updatedAt: '2024-01-15 16:30', createdAt: '2024-01-15 14:00' },
+  { batchId: 'BATCH-002', totalAmount: 32000, status: 'COMPLETED', updatedAt: '2024-01-15 12:00', createdAt: '2024-01-14 10:00' },
+];
+
+const legacyLikeDyePrintOrders = [
+  { orderId: 'DP-001', availableQty: 100, returnedFailQty: 5, returnBatches: [{ batchId: 'RB-001', qty: 5 }] },
+  { orderId: 'DP-002', availableQty: 0, returnedFailQty: 20, returnBatches: [{ batchId: 'RB-002', qty: 20 }] },
+  { orderId: 'DP-003', availableQty: 200, returnedFailQty: 0, returnBatches: [] },
+];
+
+const QC_STATUS_ZH: Record<string, string> = {
+  DRAFT: '草稿',
+  SUBMITTED: '待处理',
+  CLOSED: '已结案',
+};
+
+const LIABILITY_STATUS_ZH: Record<string, string> = {
+  DRAFT: '草稿',
+  CONFIRMED: '已确认',
+  DISPUTED: '争议中',
+  VOID: '已作废',
+};
+
+const STATEMENT_STATUS_ZH: Record<string, string> = {
+  DRAFT: '草稿',
+  CONFIRMED: '已确认',
+  CLOSED: '已关闭',
+};
+
+const BATCH_STATUS_ZH: Record<string, string> = {
+  PENDING: '待提交',
+  PROCESSING: '处理中',
+  COMPLETED: '已完成',
+};
 
 export default function FcsWorkbenchOverviewPage() {
-  const { progress, isLoading, error } = useFcsProgress();
+  const router = useRouter();
 
-  if (isLoading) {
-    return (
-      <div className="p-8 flex items-center text-gray-600">
-        <Loader size={18} className="animate-spin mr-2" /> 加载中...
-      </div>
-    );
-  }
+  const blockedTasks = processTasks.filter((task) => task.status === 'BLOCKED' && task.blockReason === 'ALLOCATION_GATE');
+  const openQc = legacyLikeQualityInspections.filter((item) => item.status !== 'CLOSED');
+  const disputedQc = legacyLikeQualityInspections.filter((item) => item.liabilityStatus === 'DISPUTED');
+  const disputedBasis = legacyLikeDeductionBasisItems.filter((item) => item.status === 'DISPUTED');
+  const readyBasis = legacyLikeDeductionBasisItems.filter((item) => item.settlementReady === true);
+  const frozenBasis = legacyLikeDeductionBasisItems.filter((item) => !item.settlementReady && item.status !== 'VOID');
+  const draftStatements = initialStatementDrafts.filter((item) => item.status === 'DRAFT');
+  const processingBatches = initialSettlementBatches.filter((item) => item.status === 'PROCESSING');
+  const dpTotal = legacyLikeDyePrintOrders.length;
+  const dpAvailable = legacyLikeDyePrintOrders.filter((item) => item.availableQty > 0).length;
+  const dpFail = legacyLikeDyePrintOrders.filter((item) => item.returnedFailQty > 0).length;
 
-  if (error) {
-    return <div className="p-8 text-red-600">错误: {error}</div>;
-  }
+  const disputedCount = new Set([
+    ...disputedQc.map((item) => item.qcId),
+    ...disputedBasis.map((item) => item.basisId),
+  ]).size;
 
-  const totalOrders = progress?.total_orders || 0;
-  const inProgress = progress?.in_progress_orders || 0;
-  const completed = progress?.completed_orders || 0;
-  const pending = progress?.pending_orders || 0;
+  const recentQc = [...legacyLikeQualityInspections]
+    .sort((a, b) => (b.updatedAt ?? b.createdAt).localeCompare(a.updatedAt ?? a.createdAt))
+    .slice(0, 5);
+
+  const recentSettlement = [
+    ...[...initialStatementDrafts]
+      .sort((a, b) => (b.updatedAt ?? b.createdAt).localeCompare(a.updatedAt ?? a.createdAt))
+      .slice(0, 3)
+      .map((item) => ({
+        id: item.statementId,
+        type: 'statement' as const,
+        amount: item.totalAmount,
+        statusZh: STATEMENT_STATUS_ZH[item.status] ?? item.status,
+      })),
+    ...[...initialSettlementBatches]
+      .sort((a, b) => (b.updatedAt ?? b.createdAt).localeCompare(a.updatedAt ?? a.createdAt))
+      .slice(0, 2)
+      .map((item) => ({
+        id: item.batchId,
+        type: 'batch' as const,
+        amount: item.totalAmount,
+        statusZh: BATCH_STATUS_ZH[item.status] ?? item.status,
+      })),
+  ].slice(0, 5);
+
+  const formatDateTime = (dt: string) => dt.replace('T', ' ').substring(0, 16);
 
   return (
-    <div className="space-y-6 p-6 bg-gray-50 min-h-full">
-      <h1 className="text-xl font-semibold text-gray-900">概览看板</h1>
+    <div className="space-y-8 p-6">
+      <h1 className="text-xl font-semibold">概览看板</h1>
 
+      {/* 核心运营 */}
       <section className="space-y-3">
         <h2 className="text-sm font-medium text-gray-500">核心运营</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard label="生产任务总数" value={totalOrders} />
-          <StatCard label="当前生产暂停任务数" value={pending} valueClass={pending > 0 ? 'text-red-600' : ''} />
-          <StatCard label="质检未结案数" value={inProgress} valueClass={inProgress > 0 ? 'text-amber-600' : ''} />
-          <StatCard label="争议中数" value={Math.max(0, totalOrders - completed - inProgress)} />
-          <StatCard label="可进入结算依据数" value={completed} valueClass="text-green-600" />
-          <StatCard label="冻结中依据数" value={Math.max(0, pending - 1)} valueClass="text-amber-600" />
-          <StatCard label="对账单草稿数" value={2} valueClass="text-blue-600" />
-          <StatCard label="处理中预付款批次数" value={1} valueClass="text-blue-600" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCard label="生产任务总数" value={processTasks.length} />
+          <StatCard 
+            label="当前生产暂停任务数" 
+            value={blockedTasks.length} 
+            highlight={blockedTasks.length > 0} 
+            highlightColor="text-red-600" 
+          />
+          <StatCard 
+            label="质检未结案数" 
+            value={openQc.length} 
+            highlight={openQc.length > 0} 
+            highlightColor="text-amber-600" 
+          />
+          <StatCard 
+            label="争议中数" 
+            value={disputedCount} 
+            highlight={disputedCount > 0} 
+            highlightColor="text-orange-600" 
+          />
+          <StatCard 
+            label="可进入结算依据数" 
+            value={readyBasis.length} 
+            highlightColor="text-green-600" 
+          />
+          <StatCard 
+            label="冻结中依据数" 
+            value={frozenBasis.length} 
+            highlight={frozenBasis.length > 0} 
+            highlightColor="text-amber-600" 
+          />
+          <StatCard 
+            label="对账单草稿数" 
+            value={draftStatements.length} 
+            highlight={draftStatements.length > 0} 
+            highlightColor="text-blue-600" 
+          />
+          <StatCard 
+            label="处理中预付款批次数" 
+            value={processingBatches.length} 
+            highlight={processingBatches.length > 0} 
+            highlightColor="text-blue-600" 
+          />
         </div>
       </section>
 
+      {/* 染印加工 */}
       <section className="space-y-3">
         <h2 className="text-sm font-medium text-gray-500">染印加工</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard label="染印加工单总数" value={18} />
-          <StatCard label="染印可继续工单数" value={13} valueClass="text-green-600" />
-          <StatCard label="染印不合格处理中数" value={2} valueClass="text-red-600" />
-          <StatCard label="回货批次数" value={7} />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCard label="染印加工单总数" value={dpTotal} />
+          <StatCard 
+            label="染印可继续工单数" 
+            value={dpAvailable} 
+            highlightColor="text-green-600" 
+          />
+          <StatCard 
+            label="染印不合格处理中数" 
+            value={dpFail} 
+            highlight={dpFail > 0} 
+            highlightColor="text-red-600" 
+          />
+          <StatCard 
+            label="回货批次数" 
+            value={legacyLikeDyePrintOrders.reduce((sum, item) => sum + item.returnBatches.length, 0)} 
+          />
         </div>
       </section>
 
-      <TableCard
-        title="最近质检事项"
-        columns={['QC单号', '生产单', 'QC结果', '判责状态', '操作']}
-        rows={qualityRows.map((row) => [
-          row.id,
-          row.order,
-          row.result,
-          row.liability,
-          <button key={row.id} className="text-blue-600 hover:text-blue-700">查看质检</button>,
-        ])}
-      />
+      {/* 最近质检事项 */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-medium text-gray-500">最近质检事项</h2>
+        <div className="rounded-lg border bg-white overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">QC单号</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">生产单</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">QC结果</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">判责状态</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500 whitespace-nowrap">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentQc.length > 0 ? (
+                  recentQc.map((qc) => {
+                    const resultClass =
+                      qc.result === 'PASS'
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : qc.result === 'FAIL'
+                          ? 'bg-red-50 text-red-700 border-red-200'
+                          : 'bg-gray-50 text-gray-700 border-gray-200';
 
-      <TableCard
-        title="最近结算事项"
-        columns={['单号', '类型', '金额', '状态', '操作']}
-        rows={settlementRows.map((row) => [
-          row.id,
-          row.type,
-          row.amount,
-          row.status,
-          <button key={row.id} className="text-blue-600 hover:text-blue-700">查看详情</button>,
-        ])}
-      />
+                    const liabilityClass =
+                      qc.liabilityStatus === 'DISPUTED'
+                        ? 'bg-orange-50 text-orange-700 border-orange-200'
+                        : qc.liabilityStatus === 'CONFIRMED'
+                          ? 'bg-green-50 text-green-700 border-green-200'
+                          : 'bg-gray-50 text-gray-700 border-gray-200';
+
+                    return (
+                      <tr key={qc.qcId} className="border-b last:border-0 hover:bg-gray-50">
+                        <td className="px-4 py-3 font-mono text-xs">{qc.qcId}</td>
+                        <td className="px-4 py-3 text-xs">{qc.productionOrderId}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex rounded border px-2 py-0.5 text-xs ${resultClass}`}>
+                            {qc.result === 'PASS' ? '合格' : qc.result === 'FAIL' ? '不合格' : QC_STATUS_ZH[qc.status] ?? qc.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex rounded border px-2 py-0.5 text-xs ${liabilityClass}`}>
+                            {LIABILITY_STATUS_ZH[qc.liabilityStatus ?? 'DRAFT'] ?? qc.liabilityStatus ?? '-'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button 
+                            onClick={() => router.push('/dashboard/fcs/quality/qc-records')}
+                            className="rounded-md px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50"
+                          >
+                            查看质检
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-gray-500">暂无质检记录</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* 最近结算事项 */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-medium text-gray-500">最近结算事项</h2>
+        <div className="rounded-lg border bg-white overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">单号</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">类型</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">金额</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">状态</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500 whitespace-nowrap">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentSettlement.length > 0 ? (
+                  recentSettlement.map((item) => {
+                    const href = item.type === 'statement' ? '/dashboard/fcs/settlement/statements' : '/dashboard/fcs/settlement/batches';
+                    const actionText = item.type === 'statement' ? '查看对账单' : '查看批次';
+                    return (
+                      <tr key={item.id} className="border-b last:border-0 hover:bg-gray-50">
+                        <td className="px-4 py-3 font-mono text-xs">{item.id}</td>
+                        <td className="px-4 py-3 text-xs">{item.type === 'statement' ? '对账单' : '预付款批次'}</td>
+                        <td className="px-4 py-3 tabular-nums">¥{item.amount.toLocaleString()}</td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex rounded border bg-gray-50 px-2 py-0.5 text-xs">{item.statusZh}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button 
+                            onClick={() => router.push(href)}
+                            className="rounded-md px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50"
+                          >
+                            {actionText}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-gray-500">暂无结算记录</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
 
-function StatCard({
-  label,
-  value,
-  valueClass = '',
-}: {
-  label: string;
-  value: string | number;
-  valueClass?: string;
+function StatCard({ 
+  label, 
+  value, 
+  highlight = false, 
+  highlightColor = 'text-gray-900' 
+}: { 
+  label: string; 
+  value: number; 
+  highlight?: boolean;
+  highlightColor?: string;
 }) {
   return (
-    <article className="rounded-lg border bg-white p-4">
-      <p className="text-sm text-gray-500 mb-1">{label}</p>
-      <p className={`text-2xl font-semibold text-gray-900 ${valueClass}`}>{value}</p>
-    </article>
-  );
-}
-
-function TableCard({
-  title,
-  columns,
-  rows,
-}: {
-  title: string;
-  columns: string[];
-  rows: Array<Array<React.ReactNode>>;
-}) {
-  return (
-    <section className="space-y-2">
-      <h2 className="text-sm font-medium text-gray-500">{title}</h2>
-      <div className="rounded-lg border bg-white overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b bg-gray-50">
-            <tr>
-              {columns.map((column) => (
-                <th key={column} className="px-4 py-3 text-left text-gray-500 font-medium whitespace-nowrap">
-                  {column}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, rowIndex) => (
-              <tr key={rowIndex} className="border-b last:border-b-0 hover:bg-gray-50">
-                {row.map((cell, cellIndex) => (
-                  <td key={cellIndex} className="px-4 py-3 whitespace-nowrap text-gray-800">
-                    {cell}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <div className="rounded-lg border bg-white p-5">
+      <p className="mb-1 text-sm text-gray-500">{label}</p>
+      <p className={`text-2xl font-semibold tabular-nums ${highlight ? highlightColor : 'text-gray-900'}`}>
+        {value}
+      </p>
+    </div>
   );
 }

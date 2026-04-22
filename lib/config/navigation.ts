@@ -1,136 +1,143 @@
 /**
  * 应用导航菜单配置
+ * 对齐 baseline app-shell-config.ts
  */
 
 import type { MenuGroup } from '@/lib/types';
 
-export type SubsystemType = 'fcs' | 'pcs' | 'pda';
+export type SubsystemType = 'fcs' | 'pcs' | 'pda' | 'pms' | 'wls' | 'los' | 'oms' | 'bfis' | 'dds';
 
-export const SUBSYSTEMS: Array<{ type: SubsystemType; label: string }> = [
-  { type: 'fcs', label: 'FCS' },
-  { type: 'pcs', label: 'PCS' },
-  { type: 'pda', label: 'PDA' },
+export const SUBSYSTEMS: Array<{ type: SubsystemType; name: string; shortName: string }> = [
+  { type: 'pcs', name: '商品中心系统', shortName: 'PCS' },
+  { type: 'pms', name: '采购管理系统', shortName: 'PMS' },
+  { type: 'fcs', name: '工厂生产协同系统', shortName: 'FCS' },
+  { type: 'wls', name: '仓储物流系统', shortName: 'WLS' },
+  { type: 'los', name: '直播运营系统', shortName: 'LOS' },
+  { type: 'oms', name: '订单管理系统', shortName: 'OMS' },
+  { type: 'bfis', name: '业财一体化系统', shortName: 'BFIS' },
+  { type: 'dds', name: '数据决策系统', shortName: 'DDS' },
 ];
 
-// FCS 菜单（对齐 baseline IA）
+// FCS 菜单
 export const fcsMenuGroups: MenuGroup[] = [
   {
     key: 'fcs-platform',
     title: '平台运营系统',
+    icon: 'PanelsTopLeft',
     items: [
       {
         key: 'fcs-platform-workbench',
         title: '工作台',
         icon: 'LayoutDashboard',
         children: [
-          { key: 'fcs-platform-workbench-overview', title: '运营看板', href: '/dashboard/fcs/workbench/overview' },
-          { key: 'fcs-platform-workbench-todos', title: '待办中心', href: '/dashboard/fcs/workbench/todos' },
+          { key: 'workbench-overview', title: '概览看板', icon: 'LayoutDashboard', href: '/dashboard/fcs/workbench/overview' },
+          { key: 'workbench-todos', title: '我的待办', icon: 'ListTodo', href: '/dashboard/fcs/workbench/todos' },
         ],
       },
       {
         key: 'fcs-platform-factories',
-        title: '工厂管理',
+        title: '工厂池管理',
         icon: 'Factory',
         children: [
-          { key: 'fcs-platform-factories-profile', title: '工厂档案', href: '/dashboard/fcs/factories/profile' },
-          { key: 'fcs-platform-factories-capacity-profile', title: '产能画像', href: '/dashboard/fcs/factories/capacity-profile' },
-          { key: 'fcs-platform-factories-capability', title: '能力标签', href: '/dashboard/fcs/factories/capability' },
-          { key: 'fcs-platform-factories-settlement', title: '结算配置', href: '/dashboard/fcs/factories/settlement' },
-          { key: 'fcs-platform-factories-status', title: '状态监控', href: '/dashboard/fcs/factories/status' },
-          { key: 'fcs-platform-factories-performance', title: '绩效评估', href: '/dashboard/fcs/factories/performance' },
+          { key: 'factories-profile', title: '工厂档案', icon: 'Factory', href: '/dashboard/fcs/factories/profile' },
+          { key: 'factories-capacity-profile', title: '工厂产能档案', icon: 'Gauge', href: '/dashboard/fcs/factories/capacity-profile' },
+          { key: 'factories-capability', title: '能力标签', icon: 'Tags', href: '/dashboard/fcs/factories/capability' },
+          { key: 'factories-settlement', title: '结算信息', icon: 'Receipt', href: '/dashboard/fcs/factories/settlement' },
+          { key: 'factories-status', title: '工厂状态', icon: 'ToggleLeft', href: '/dashboard/fcs/factories/status' },
+          { key: 'factories-performance', title: '工厂绩效', icon: 'BarChart3', href: '/dashboard/fcs/factories/performance' },
         ],
       },
       {
         key: 'fcs-platform-production',
-        title: '生产管理',
-        icon: 'Calendar',
+        title: '生产单管理',
+        icon: 'FilePlus2',
         children: [
-          { key: 'fcs-platform-production-demand-inbox', title: '需求池', href: '/dashboard/fcs/production/demand-inbox' },
-          { key: 'fcs-platform-production-orders', title: '生产订单', href: '/dashboard/fcs/production/orders' },
-          { key: 'fcs-platform-production-plan', title: '计划排程', href: '/dashboard/fcs/production/plan' },
-          { key: 'fcs-platform-production-delivery-warehouse', title: '入库管理', href: '/dashboard/fcs/production/delivery-warehouse' },
-          { key: 'fcs-platform-production-changes', title: '变更管理', href: '/dashboard/fcs/production/changes' },
-          { key: 'fcs-platform-production-status', title: '执行状态', href: '/dashboard/fcs/production/status' },
-          { key: 'fcs-platform-production-craft-dict', title: '工艺字典', href: '/dashboard/fcs/production/craft-dict' },
+          { key: 'production-demand-inbox', title: '生产需求接收', icon: 'Inbox', href: '/dashboard/fcs/production/demand-inbox' },
+          { key: 'production-orders', title: '生产单管理', icon: 'FilePlus2', href: '/dashboard/fcs/production/orders' },
+          { key: 'production-plan', title: '生产单计划', icon: 'CalendarClock', href: '/dashboard/fcs/production/plan' },
+          { key: 'production-delivery-warehouse', title: '交付仓配置', icon: 'Warehouse', href: '/dashboard/fcs/production/delivery-warehouse' },
+          { key: 'production-changes', title: '变更管理', icon: 'GitPullRequest', href: '/dashboard/fcs/production/changes' },
+          { key: 'production-status', title: '状态管理', icon: 'Workflow', href: '/dashboard/fcs/production/status' },
+          { key: 'production-craft-dict', title: '工序工艺字典', icon: 'BookOpen', href: '/dashboard/fcs/production/craft-dict' },
         ],
       },
       {
         key: 'fcs-platform-process',
-        title: '任务协同',
-        icon: 'ClipboardList',
+        title: '任务编排与执行准备',
+        icon: 'Split',
         children: [
-          { key: 'fcs-platform-process-task-breakdown', title: '任务拆解', href: '/dashboard/fcs/process/task-breakdown' },
-          { key: 'fcs-platform-process-dye-requirements', title: '染色要求', href: '/dashboard/fcs/process/dye-requirements' },
-          { key: 'fcs-platform-process-print-requirements', title: '印花要求', href: '/dashboard/fcs/process/print-requirements' },
-          { key: 'fcs-platform-process-dye-orders', title: '染色工单', href: '/dashboard/fcs/process/dye-orders' },
-          { key: 'fcs-platform-process-print-orders', title: '印花工单', href: '/dashboard/fcs/process/print-orders' },
+          { key: 'process-task-breakdown', title: '任务清单', icon: 'Split', href: '/dashboard/fcs/process/task-breakdown' },
+          { key: 'process-dye-requirements', title: '染色需求单', icon: 'ClipboardList', href: '/dashboard/fcs/process/dye-requirements' },
+          { key: 'process-print-requirements', title: '印花需求单', icon: 'FileText', href: '/dashboard/fcs/process/print-requirements' },
+          { key: 'process-dye-orders', title: '染色加工单', icon: 'Package', href: '/dashboard/fcs/process/dye-orders' },
+          { key: 'process-print-orders', title: '印花加工单', icon: 'ClipboardCheck', href: '/dashboard/fcs/process/print-orders' },
         ],
       },
       {
         key: 'fcs-platform-dispatch',
-        title: '派工与招标',
-        icon: 'Send',
+        title: '任务分配',
+        icon: 'LayoutGrid',
         children: [
-          { key: 'fcs-platform-dispatch-board', title: '派工看板', href: '/dashboard/fcs/dispatch/board' },
-          { key: 'fcs-platform-dispatch-tenders', title: '招标管理', href: '/dashboard/fcs/dispatch/tenders' },
+          { key: 'dispatch-board', title: '任务分配', icon: 'LayoutGrid', href: '/dashboard/fcs/dispatch/board' },
+          { key: 'dispatch-tenders', title: '招标单管理', icon: 'Gavel', href: '/dashboard/fcs/dispatch/tenders' },
         ],
       },
       {
         key: 'fcs-platform-progress',
-        title: '进度管理',
-        icon: 'TrendingUp',
+        title: '任务进度与异常',
+        icon: 'Kanban',
         children: [
-          { key: 'fcs-platform-progress-board', title: '进度看板', href: '/dashboard/fcs/progress/board' },
-          { key: 'fcs-platform-progress-exceptions', title: '异常中心', href: '/dashboard/fcs/progress/exceptions' },
-          { key: 'fcs-platform-progress-urge', title: '催办中心', href: '/dashboard/fcs/progress/urge' },
-          { key: 'fcs-platform-progress-handover', title: '交接追踪', href: '/dashboard/fcs/progress/handover' },
-          { key: 'fcs-platform-progress-material', title: '物料跟进', href: '/dashboard/fcs/progress/material' },
-          { key: 'fcs-platform-progress-milestone-config', title: '里程碑配置', href: '/dashboard/fcs/progress/milestone-config' },
-          { key: 'fcs-platform-progress-cutting-overview', title: '裁床总览', href: '/dashboard/fcs/progress/cutting-overview' },
-          { key: 'fcs-platform-progress-cutting-exception-center', title: '裁床异常中心', href: '/dashboard/fcs/progress/cutting-exception-center' },
+          { key: 'progress-board', title: '任务进度看板', icon: 'Kanban', href: '/dashboard/fcs/progress/board' },
+          { key: 'progress-exceptions', title: '异常定位与处理', icon: 'Search', href: '/dashboard/fcs/progress/exceptions' },
+          { key: 'progress-urge', title: '催办与通知', icon: 'BellRing', href: '/dashboard/fcs/progress/urge' },
+          { key: 'progress-handover', title: '交接链路追踪', icon: 'ScanLine', href: '/dashboard/fcs/progress/handover' },
+          { key: 'progress-material', title: '领料进度跟踪', icon: 'PackageSearch', href: '/dashboard/fcs/progress/material' },
+          { key: 'progress-milestone-config', title: '节点上报配置', icon: 'Flag', href: '/dashboard/fcs/progress/milestone-config' },
+          { key: 'progress-cutting-overview', title: '裁片任务总览', icon: 'Scissors', href: '/dashboard/fcs/progress/cutting-overview' },
+          { key: 'progress-cutting-exception-center', title: '裁片专项异常中心', icon: 'AlertTriangle', href: '/dashboard/fcs/progress/cutting-exception-center' },
         ],
       },
       {
         key: 'fcs-platform-quality',
-        title: '质量管理',
-        icon: 'ShieldCheck',
+        title: '质量与扣款',
+        icon: 'ClipboardCheck',
         children: [
-          { key: 'fcs-platform-quality-qc-records', title: '质检记录', href: '/dashboard/fcs/quality/qc-records' },
-          { key: 'fcs-platform-quality-deduction-analysis', title: '扣款分析', href: '/dashboard/fcs/quality/deduction-analysis' },
+          { key: 'quality-inspection', title: '质检记录', icon: 'ClipboardCheck', href: '/dashboard/fcs/quality/qc-records' },
+          { key: 'quality-deduction-analysis', title: '扣款分析', icon: 'BarChart3', href: '/dashboard/fcs/quality/deduction-analysis' },
         ],
       },
       {
         key: 'fcs-platform-settlement',
-        title: '结算中心',
+        title: '对账与结算',
         icon: 'Wallet',
         children: [
-          { key: 'fcs-platform-settlement-statements', title: '结算单', href: '/dashboard/fcs/settlement/statements' },
-          { key: 'fcs-platform-settlement-adjustments', title: '差异调整', href: '/dashboard/fcs/settlement/adjustments' },
-          { key: 'fcs-platform-settlement-material-statements', title: '物料对账', href: '/dashboard/fcs/settlement/material-statements' },
-          { key: 'fcs-platform-settlement-batches', title: '批次管理', href: '/dashboard/fcs/settlement/batches' },
+          { key: 'settlement-statements', title: '对账单', icon: 'FileText', href: '/dashboard/fcs/settlement/statements' },
+          { key: 'settlement-adjustments', title: '预结算流水', icon: 'SlidersHorizontal', href: '/dashboard/fcs/settlement/adjustments' },
+          { key: 'settlement-material-statements', title: '车缝领料对账', icon: 'ClipboardCheck', href: '/dashboard/fcs/settlement/material-statements' },
+          { key: 'settlement-batches', title: '预付款批次', icon: 'Layers', href: '/dashboard/fcs/settlement/batches' },
         ],
       },
       {
         key: 'fcs-platform-trace',
-        title: '追溯中心',
-        icon: 'Box',
+        title: '成本溯源管理',
+        icon: 'SearchCheck',
         children: [
-          { key: 'fcs-platform-trace-parent-codes', title: '母码管理', href: '/dashboard/fcs/trace/parent-codes' },
-          { key: 'fcs-platform-trace-unique-codes', title: '唯一码管理', href: '/dashboard/fcs/trace/unique-codes' },
-          { key: 'fcs-platform-trace-mapping', title: '映射关系', href: '/dashboard/fcs/trace/mapping' },
-          { key: 'fcs-platform-trace-unit-price', title: '单价维护', href: '/dashboard/fcs/trace/unit-price' },
+          { key: 'trace-parent-codes', title: '扎包周转包父码管理', icon: 'Boxes', href: '/dashboard/fcs/trace/parent-codes' },
+          { key: 'trace-unique-codes', title: '唯一码管理', icon: 'Box', href: '/dashboard/fcs/trace/unique-codes' },
+          { key: 'trace-mapping', title: '父子码映射', icon: 'Merge', href: '/dashboard/fcs/trace/mapping' },
+          { key: 'trace-unit-price', title: '单价追溯查询', icon: 'SearchCheck', href: '/dashboard/fcs/trace/unit-price' },
         ],
       },
       {
         key: 'fcs-platform-capacity',
-        title: '产能决策',
-        icon: 'Gauge',
+        title: '产能日历',
+        icon: 'LineChart',
         children: [
-          { key: 'fcs-platform-capacity-overview', title: '产能总览', href: '/dashboard/fcs/capacity/overview' },
-          { key: 'fcs-platform-capacity-constraints', title: '约束分析', href: '/dashboard/fcs/capacity/constraints' },
-          { key: 'fcs-platform-capacity-risk', title: '风险预警', href: '/dashboard/fcs/capacity/risk' },
-          { key: 'fcs-platform-capacity-bottleneck', title: '瓶颈诊断', href: '/dashboard/fcs/capacity/bottleneck' },
-          { key: 'fcs-platform-capacity-policies', title: '策略建议', href: '/dashboard/fcs/capacity/policies' },
+          { key: 'capacity-overview', title: '供需总览', icon: 'LineChart', href: '/dashboard/fcs/capacity/overview' },
+          { key: 'capacity-constraints', title: '工厂日历', icon: 'Filter', href: '/dashboard/fcs/capacity/constraints' },
+          { key: 'capacity-risk', title: '任务工时风险', icon: 'TrendingUp', href: '/dashboard/fcs/capacity/risk' },
+          { key: 'capacity-bottleneck', title: '工艺瓶颈与待分配', icon: 'AlertOctagon', href: '/dashboard/fcs/capacity/bottleneck' },
+          { key: 'capacity-policies', title: '暂停例外', icon: 'Settings2', href: '/dashboard/fcs/capacity/policies' },
         ],
       },
     ],
@@ -138,149 +145,288 @@ export const fcsMenuGroups: MenuGroup[] = [
   {
     key: 'fcs-craft',
     title: '工艺工厂运营系统',
+    icon: 'Factory',
     items: [
       {
-        key: 'fcs-craft-workbench',
-        title: '工艺工作台',
+        key: 'craft-workbench',
+        title: '工作台',
         icon: 'LayoutDashboard',
-        children: [{ key: 'fcs-craft-workbench-overview', title: '运营总览', href: '/dashboard/fcs/craft/workbench/overview' }],
+        children: [
+          { key: 'craft-workbench-overview', title: '总览', icon: 'LayoutDashboard', href: '/dashboard/fcs/craft/workbench/overview' },
+        ],
       },
       {
-        key: 'fcs-craft-cutting',
-        title: '裁床管理',
+        key: 'craft-cutting-overview',
+        title: '裁片总览',
         icon: 'Scissors',
         children: [
-          { key: 'fcs-craft-cutting-overview', title: '裁床看板', href: '/dashboard/fcs/craft/cutting/overview' },
-          { key: 'fcs-craft-cutting-prep', title: '备料准备', href: '/dashboard/fcs/craft/cutting/prep' },
-          { key: 'fcs-craft-cutting-execution', title: '执行记录', href: '/dashboard/fcs/craft/cutting/execution' },
-          { key: 'fcs-craft-cutting-closed-loop', title: '闭环管理', href: '/dashboard/fcs/craft/cutting/closed-loop' },
-          { key: 'fcs-craft-cutting-handover', title: '交接管理', href: '/dashboard/fcs/craft/cutting/handover' },
+          { key: 'craft-cutting-production-progress', title: '生产单进度', icon: 'ListTodo', href: '/dashboard/fcs/craft/cutting/production-progress' },
+          { key: 'craft-cutting-cuttable-pool', title: '可裁排产', icon: 'CalendarClock', href: '/dashboard/fcs/craft/cutting/cuttable-pool' },
+          { key: 'craft-cutting-merge-batches', title: '合并裁剪批次', icon: 'Layers', href: '/dashboard/fcs/craft/cutting/merge-batches' },
         ],
       },
       {
-        key: 'fcs-craft-printing',
+        key: 'craft-cutting-prep',
+        title: '裁前准备',
+        icon: 'PackageSearch',
+        children: [
+          { key: 'craft-cutting-original-orders', title: '原始裁片单', icon: 'ClipboardList', href: '/dashboard/fcs/craft/cutting/original-orders' },
+          { key: 'craft-cutting-material-prep', title: '仓库配料领料', icon: 'PackageSearch', href: '/dashboard/fcs/craft/cutting/material-prep' },
+          { key: 'craft-cutting-marker-list', title: '唛架列表', icon: 'Ruler', href: '/dashboard/fcs/craft/cutting/marker-list' },
+        ],
+      },
+      {
+        key: 'craft-cutting-execution',
+        title: '铺布执行',
+        icon: 'Rows3',
+        children: [
+          { key: 'craft-cutting-spreading-list', title: '铺布列表', icon: 'Rows3', href: '/dashboard/fcs/craft/cutting/spreading-list' },
+        ],
+      },
+      {
+        key: 'craft-cutting-closed-loop',
+        title: '裁后处理',
+        icon: 'PackageCheck',
+        children: [
+          { key: 'craft-cutting-replenishment', title: '补料管理', icon: 'ShieldAlert', href: '/dashboard/fcs/craft/cutting/replenishment' },
+          { key: 'craft-cutting-fei-tickets', title: '打印菲票', icon: 'Printer', href: '/dashboard/fcs/craft/cutting/fei-tickets' },
+          { key: 'craft-cutting-transfer-bags', title: '中转袋流转', icon: 'PackageCheck', href: '/dashboard/fcs/craft/cutting/transfer-bags' },
+          { key: 'craft-cutting-cut-piece-warehouse', title: '裁片仓', icon: 'Archive', href: '/dashboard/fcs/craft/cutting/cut-piece-warehouse' },
+          { key: 'craft-cutting-special-processes', title: '特殊工艺', icon: 'Sparkles', href: '/dashboard/fcs/craft/cutting/special-processes' },
+          { key: 'craft-cutting-closing-summary', title: '裁剪总结', icon: 'ClipboardCheck', href: '/dashboard/fcs/craft/cutting/summary' },
+        ],
+      },
+      {
+        key: 'craft-cutting-handover',
+        title: '裁片仓交接',
+        icon: 'Warehouse',
+        children: [
+          { key: 'craft-cutting-fabric-warehouse', title: '裁床仓', icon: 'Warehouse', href: '/dashboard/fcs/craft/cutting/fabric-warehouse' },
+          { key: 'craft-cutting-sample-warehouse', title: '样衣仓', icon: 'Shirt', href: '/dashboard/fcs/craft/cutting/sample-warehouse' },
+        ],
+      },
+      {
+        key: 'craft-printing',
         title: '印花管理',
-        icon: 'Printer',
+        icon: 'Palette',
         children: [
-          { key: 'fcs-craft-printing-work-orders', title: '印花工单', href: '/dashboard/fcs/craft/printing/work-orders' },
-          { key: 'fcs-craft-printing-pending-review', title: '待审核', href: '/dashboard/fcs/craft/printing/pending-review' },
-          { key: 'fcs-craft-printing-progress', title: '执行进度', href: '/dashboard/fcs/craft/printing/progress' },
-          { key: 'fcs-craft-printing-statistics', title: '统计分析', href: '/dashboard/fcs/craft/printing/statistics' },
-          { key: 'fcs-craft-printing-dashboards', title: '可视化看板', href: '/dashboard/fcs/craft/printing/dashboards' },
+          { key: 'craft-printing-work-orders', title: '印花工单', icon: 'ClipboardList', href: '/dashboard/fcs/craft/printing/work-orders' },
+          { key: 'craft-printing-pending-review', title: '待审核工单', icon: 'ClipboardCheck', href: '/dashboard/fcs/craft/printing/pending-review' },
+          { key: 'craft-printing-progress', title: '生产进度', icon: 'Kanban', href: '/dashboard/fcs/craft/printing/progress' },
+          { key: 'craft-printing-statistics', title: '数据统计', icon: 'BarChart3', href: '/dashboard/fcs/craft/printing/statistics' },
+          { key: 'craft-printing-dashboards', title: '生产大屏', icon: 'Monitor', href: '/dashboard/fcs/craft/printing/dashboards' },
         ],
       },
       {
-        key: 'fcs-craft-dyeing',
+        key: 'craft-dyeing',
         title: '染色管理',
-        icon: 'Droplets',
+        icon: 'Droplet',
         children: [
-          { key: 'fcs-craft-dyeing-work-orders', title: '染色工单', href: '/dashboard/fcs/craft/dyeing/work-orders' },
-          { key: 'fcs-craft-dyeing-dye-orders', title: '投缸单', href: '/dashboard/fcs/craft/dyeing/dye-orders' },
-          { key: 'fcs-craft-dyeing-reports', title: '报表中心', href: '/dashboard/fcs/craft/dyeing/reports' },
+          { key: 'craft-dyeing-work-orders', title: '染色工单', icon: 'ClipboardList', href: '/dashboard/fcs/craft/dyeing/work-orders' },
+          { key: 'craft-dyeing-dye-orders', title: '染料单', icon: 'Package', href: '/dashboard/fcs/craft/dyeing/dye-orders' },
+          { key: 'craft-dyeing-reports', title: '染色报表', icon: 'BarChart3', href: '/dashboard/fcs/craft/dyeing/reports' },
         ],
       },
     ],
   },
+  {
+    key: 'fcs-pda',
+    title: '工厂端移动应用',
+    icon: 'Smartphone',
+    items: [
+      { key: 'pda-todo', title: '待办', icon: 'Bell', href: '/dashboard/pda/notify' },
+      { key: 'pda-task-receive', title: '接单', icon: 'ClipboardList', href: '/dashboard/pda/task-receive' },
+      { key: 'pda-exec', title: '执行', icon: 'Play', href: '/dashboard/pda/exec' },
+      { key: 'pda-handover', title: '交接', icon: 'RefreshCw', href: '/dashboard/pda/handover' },
+      { key: 'pda-settlement', title: '结算', icon: 'Wallet', href: '/dashboard/pda/settlement' },
+    ],
+  },
 ];
 
-// PCS 菜单（对齐 baseline IA）
+// PCS 菜单
 export const pcsMenuGroups: MenuGroup[] = [
   {
     key: 'pcs-main',
-    title: '商品协调系统',
+    title: '商品中心系统',
     items: [
       {
         key: 'pcs-menu-workspace',
         title: '工作台',
         icon: 'LayoutDashboard',
         children: [
-          { key: 'pcs-menu-workspace-overview', title: '总览', href: '/dashboard/pcs/workspace/overview' },
-          { key: 'pcs-menu-workspace-todos', title: '待办', href: '/dashboard/pcs/workspace/todos' },
-          { key: 'pcs-menu-workspace-alerts', title: '预警', href: '/dashboard/pcs/workspace/alerts' },
+          { key: 'pcs-workspace-overview', title: '概览看板', icon: 'LayoutDashboard', href: '/dashboard/pcs/workspace/overview' },
+          { key: 'pcs-workspace-todos', title: '我的待办', icon: 'CheckSquare', href: '/dashboard/pcs/workspace/todos' },
+          { key: 'pcs-workspace-alerts', title: '风险提醒', icon: 'AlertTriangle', href: '/dashboard/pcs/workspace/alerts' },
         ],
       },
       {
         key: 'pcs-menu-projects',
-        title: '项目管理',
-        icon: 'Package',
+        title: '商品项目管理',
+        icon: 'FolderKanban',
         children: [
-          { key: 'pcs-menu-projects-list', title: '项目列表', href: '/dashboard/pcs/projects/list' },
-          { key: 'pcs-menu-projects-templates', title: '模板配置', href: '/dashboard/pcs/projects/templates' },
-          { key: 'pcs-menu-projects-work-items', title: '工作项', href: '/dashboard/pcs/projects/work-items' },
+          { key: 'pcs-project-list', title: '商品项目', icon: 'FolderKanban', href: '/dashboard/pcs/projects' },
+          { key: 'pcs-template', title: '项目模板管理', icon: 'FileText', href: '/dashboard/pcs/templates' },
+          { key: 'pcs-work-items', title: '工作项库', icon: 'CheckSquare', href: '/dashboard/pcs/work-items' },
         ],
       },
       {
         key: 'pcs-menu-testing',
-        title: '直播与测款',
-        icon: 'Monitor',
+        title: '测款与渠道管理',
+        icon: 'TestTube',
         children: [
-          { key: 'pcs-menu-testing-live', title: '直播测款', href: '/dashboard/pcs/testing/live' },
-          { key: 'pcs-menu-testing-video', title: '短视频测款', href: '/dashboard/pcs/testing/video' },
-          { key: 'pcs-menu-testing-stores', title: '门店渠道', href: '/dashboard/pcs/channels/stores' },
+          { key: 'pcs-live-testing', title: '直播测款', icon: 'TestTube', href: '/dashboard/pcs/testing/live' },
+          { key: 'pcs-video-testing', title: '短视频测款', icon: 'TestTube', href: '/dashboard/pcs/testing/video' },
+          { key: 'pcs-channel-stores', title: '渠道店铺管理', icon: 'Store', href: '/dashboard/pcs/channels/stores' },
         ],
       },
       {
-        key: 'pcs-menu-patterns',
-        title: '版型管理',
-        icon: 'RefreshCw',
+        key: 'pcs-menu-pattern',
+        title: '工程开发与打样管理',
+        icon: 'Scissors',
         children: [
-          { key: 'pcs-menu-patterns-revision', title: '改款管理', href: '/dashboard/pcs/patterns/revision' },
-          { key: 'pcs-menu-patterns-creation', title: '创款管理', href: '/dashboard/pcs/patterns/creation' },
-          { key: 'pcs-menu-patterns-part-templates', title: '部位模板', href: '/dashboard/pcs/patterns/part-templates' },
-          { key: 'pcs-menu-patterns-colors', title: '颜色管理', href: '/dashboard/pcs/patterns/colors' },
-          { key: 'pcs-menu-patterns-library', title: '版型库', href: '/dashboard/pcs/patterns/library' },
-          { key: 'pcs-menu-patterns-first-sample', title: '头版打样', href: '/dashboard/pcs/samples/first-sample' },
-          { key: 'pcs-menu-patterns-pre-production', title: '产前样管理', href: '/dashboard/pcs/samples/pre-production' },
+          { key: 'pcs-revision-tasks', title: '改版任务', icon: 'FileText', href: '/dashboard/pcs/patterns/revision' },
+          { key: 'pcs-pattern-tasks', title: '制版任务', icon: 'Scissors', href: '/dashboard/pcs/patterns' },
+          { key: 'pcs-part-template-library', title: '部位模板库', icon: 'Archive', href: '/dashboard/pcs/patterns/part-templates' },
+          { key: 'pcs-color-tasks', title: '花型任务', icon: 'Palette', href: '/dashboard/pcs/patterns/colors' },
+          { key: 'pcs-pattern-library', title: '花型库', icon: 'Image', href: '/dashboard/pcs/pattern-library' },
+          { key: 'pcs-first-sample', title: '首版样衣打样', icon: 'Droplet', href: '/dashboard/pcs/samples/first-sample' },
+          { key: 'pcs-pre-production', title: '产前版样衣', icon: 'CheckSquare', href: '/dashboard/pcs/samples/pre-production' },
         ],
       },
       {
         key: 'pcs-menu-products',
-        title: '产品档案',
-        icon: 'Move',
+        title: '商品档案',
+        icon: 'Archive',
         children: [
-          { key: 'pcs-menu-products-styles', title: '款式档案', href: '/dashboard/pcs/products/styles' },
-          { key: 'pcs-menu-products-specifications', title: '规格管理', href: '/dashboard/pcs/products/specifications' },
-          { key: 'pcs-menu-products-channel-products', title: '渠道商品', href: '/dashboard/pcs/products/channel-products' },
+          { key: 'pcs-style-list', title: '款式档案', icon: 'Archive', href: '/dashboard/pcs/products/styles' },
+          { key: 'pcs-spec-list', title: '规格档案', icon: 'Package', href: '/dashboard/pcs/products/specifications' },
+          { key: 'pcs-channel-products', title: '渠道店铺商品', icon: 'ShoppingCart', href: '/dashboard/pcs/products/channel-products' },
         ],
       },
       {
         key: 'pcs-menu-materials',
         title: '物料档案',
-        icon: 'Database',
+        icon: 'Layers',
         children: [
-          { key: 'pcs-menu-materials-fabric', title: '面料', href: '/dashboard/pcs/materials/fabric' },
-          { key: 'pcs-menu-materials-accessory', title: '辅料', href: '/dashboard/pcs/materials/accessory' },
-          { key: 'pcs-menu-materials-yarn', title: '纱线', href: '/dashboard/pcs/materials/yarn' },
-          { key: 'pcs-menu-materials-consumable', title: '耗材', href: '/dashboard/pcs/materials/consumable' },
+          { key: 'pcs-fabric-list', title: '面料档案', icon: 'Layers', href: '/dashboard/pcs/materials/fabric' },
+          { key: 'pcs-accessory-list', title: '辅料档案', icon: 'Paperclip', href: '/dashboard/pcs/materials/accessory' },
+          { key: 'pcs-yarn-list', title: '纱线档案', icon: 'CircleDot', href: '/dashboard/pcs/materials/yarn' },
+          { key: 'pcs-consumable-list', title: '耗材档案', icon: 'Package', href: '/dashboard/pcs/materials/consumable' },
         ],
       },
       {
         key: 'pcs-menu-settings',
-        title: '设置中心',
+        title: '系统设置',
         icon: 'Settings',
-        children: [{ key: 'pcs-menu-settings-config-workspace', title: '工作区配置', href: '/dashboard/pcs/settings/config-workspace' }],
+        children: [
+          { key: 'pcs-config-workspace', title: '基础配置', icon: 'Settings', href: '/dashboard/pcs/settings/config-workspace' },
+        ],
       },
     ],
   },
 ];
 
-// PDA 菜单（对齐 baseline IA）
+// PDA 菜单
 export const pdaMenuGroups: MenuGroup[] = [
   {
     key: 'pda-main',
     title: '工厂端移动应用',
     items: [
-      { key: 'fcs-pda-notify', title: '通知与待办', href: '/dashboard/pda/notify', icon: 'LayoutDashboard' },
-      { key: 'fcs-pda-task-receive', title: '任务接收', href: '/dashboard/pda/task-receive', icon: 'Database' },
-      { key: 'fcs-pda-exec', title: '执行上报', href: '/dashboard/pda/exec', icon: 'BarChart3' },
-      { key: 'fcs-pda-handover', title: '工序交接', href: '/dashboard/pda/handover', icon: 'RefreshCw' },
-      { key: 'fcs-pda-settlement', title: '结算中心', href: '/dashboard/pda/settlement', icon: 'Download' },
+      { key: 'pda-notify', title: '通知与待办', icon: 'Bell', href: '/dashboard/pda/notify' },
+      { key: 'pda-task-receive', title: '任务接收', icon: 'ClipboardList', href: '/dashboard/pda/task-receive' },
+      { key: 'pda-exec', title: '执行上报', icon: 'Play', href: '/dashboard/pda/exec' },
+      { key: 'pda-handover', title: '工序交接', icon: 'RefreshCw', href: '/dashboard/pda/handover' },
+      { key: 'pda-settlement', title: '结算中心', icon: 'Wallet', href: '/dashboard/pda/settlement' },
+    ],
+  },
+];
+
+// PMS 采购管理菜单
+export const pmsMenuGroups: MenuGroup[] = [
+  {
+    key: 'pms-main',
+    title: '采购管理',
+    items: [
+      { key: 'purchase-order', title: '采购订单', icon: 'FileText', href: '/dashboard/pms/purchase-order' },
+      { key: 'supplier', title: '供应商管理', icon: 'Building2', href: '/dashboard/pms/supplier' },
+      { key: 'contract', title: '合同管理', icon: 'FileSignature', href: '/dashboard/pms/contract' },
+    ],
+  },
+];
+
+// WLS 仓储物流菜单
+export const wlsMenuGroups: MenuGroup[] = [
+  {
+    key: 'wls-main',
+    title: '仓储管理',
+    items: [
+      { key: 'inventory', title: '库存管理', icon: 'Archive', href: '/dashboard/wls/inventory' },
+      { key: 'inbound', title: '入库管理', icon: 'ArrowDownToLine', href: '/dashboard/wls/inbound' },
+      { key: 'outbound', title: '出库管理', icon: 'ArrowUpFromLine', href: '/dashboard/wls/outbound' },
+    ],
+  },
+];
+
+// LOS 直播运营菜单
+export const losMenuGroups: MenuGroup[] = [
+  {
+    key: 'los-main',
+    title: '直播运营',
+    items: [
+      { key: 'live-schedule', title: '直播排期', icon: 'Video', href: '/dashboard/los/live-schedule' },
+      { key: 'live-room', title: '直播间管理', icon: 'Tv', href: '/dashboard/los/live-room' },
+      { key: 'anchor', title: '主播管理', icon: 'Users', href: '/dashboard/los/anchor' },
+    ],
+  },
+];
+
+// OMS 订单管理菜单
+export const omsMenuGroups: MenuGroup[] = [
+  {
+    key: 'oms-main',
+    title: '订单管理',
+    items: [
+      { key: 'order-list', title: '订单列表', icon: 'ShoppingCart', href: '/dashboard/oms/order-list' },
+      { key: 'return-order', title: '退换货管理', icon: 'RotateCcw', href: '/dashboard/oms/return-order' },
+      { key: 'after-sale', title: '售后服务', icon: 'Headphones', href: '/dashboard/oms/after-sale' },
+    ],
+  },
+];
+
+// BFIS 业财一体化菜单
+export const bfisMenuGroups: MenuGroup[] = [
+  {
+    key: 'bfis-main',
+    title: '财务管理',
+    items: [
+      { key: 'financial-report', title: '财务报表', icon: 'BarChart3', href: '/dashboard/bfis/financial-report' },
+      { key: 'cost-analysis', title: '成本分析', icon: 'PieChart', href: '/dashboard/bfis/cost-analysis' },
+      { key: 'settlement', title: '结算管理', icon: 'Wallet', href: '/dashboard/bfis/settlement' },
+    ],
+  },
+];
+
+// DDS 数据决策菜单
+export const ddsMenuGroups: MenuGroup[] = [
+  {
+    key: 'dds-main',
+    title: '数据分析',
+    items: [
+      { key: 'dashboard', title: '数据看板', icon: 'LayoutDashboard', href: '/dashboard/dds/dashboard' },
+      { key: 'report', title: '报表中心', icon: 'FileBarChart', href: '/dashboard/dds/report' },
+      { key: 'bi', title: 'BI分析', icon: 'TrendingUp', href: '/dashboard/dds/bi' },
     ],
   },
 ];
 
 export const menusBySubsystem = {
-  fcs: fcsMenuGroups,
   pcs: pcsMenuGroups,
+  pms: pmsMenuGroups,
+  fcs: fcsMenuGroups,
+  wls: wlsMenuGroups,
+  los: losMenuGroups,
+  oms: omsMenuGroups,
+  bfis: bfisMenuGroups,
+  dds: ddsMenuGroups,
   pda: pdaMenuGroups,
 } as const;

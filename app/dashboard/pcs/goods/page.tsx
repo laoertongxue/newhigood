@@ -1,136 +1,151 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, ChevronLeft, ChevronRight, Loader } from 'lucide-react';
-import { usePcsGoods } from '@/lib/hooks/usePcsResources';
+import { usePcsGoods } from '@/lib/hooks/usePcsRealData';
 
-const CATEGORY_LABELS: Record<string, string> = {
-  fabric: '面料',
-  accessory: '辅料',
-  component: '组件',
-  other: '其他',
+const STATUS_ZH: Record<string, string> = {
+  ACTIVE: '上架',
+  INACTIVE: '下架',
+  PENDING: '待上架',
+};
+
+const STATUS_CLASS: Record<string, string> = {
+  ACTIVE: 'bg-green-50 text-green-700 border-green-200',
+  INACTIVE: 'bg-gray-100 text-gray-500 border-gray-300',
+  PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
 };
 
 export default function PcsGoodsPage() {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [channelFilter, setChannelFilter] = useState<string>('ALL');
 
-  const { goods, isLoading, error, pagination } = usePcsGoods({
-    page,
-    limit: 20,
-    search: search || undefined,
-    category: category || undefined,
+  const { goods, loading, error, refetch } = usePcsGoods();
+
+  const filteredGoods = goods.filter((g) => {
+    if (statusFilter !== 'ALL' && g.status !== statusFilter) return false;
+    if (channelFilter !== 'ALL' && g.channel !== channelFilter) return false;
+    return true;
   });
 
+  const stats = {
+    total: goods.length,
+    active: goods.filter((g) => g.status === 'ACTIVE').length,
+    pending: goods.filter((g) => g.status === 'PENDING').length,
+    totalValue: goods.reduce((sum, g) => sum + g.price, 0),
+  };
+
+  // 获取渠道列表
+  const channels = [...new Set(goods.map((g) => g.channel).filter(Boolean))];
+
   return (
-    <div className="flex flex-col gap-6 p-6 bg-gray-50 min-h-full">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">商品列表</h1>
-        <p className="text-gray-600 mt-1">管理商品主数据与库存信息</p>
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">商品管理</h1>
+        <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+          新增商品
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="md:col-span-3 relative">
-          <Search className="absolute left-3 top-3 text-gray-400" size={20} />
-          <input
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            placeholder="搜索商品编码、名称或供应商..."
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-          />
-        </div>
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatCard label="商品总数" value={stats.total} />
+        <StatCard label="已上架" value={stats.active} highlightColor="text-green-600" />
+        <StatCard label="待上架" value={stats.pending} highlightColor="text-amber-600" />
+        <StatCard label="总价值" value={`¥${stats.totalValue.toLocaleString()}`} />
+      </div>
 
-        <select
-          value={category}
-          onChange={(e) => {
-            setCategory(e.target.value);
-            setPage(1);
-          }}
-          className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+      {/* 筛选器 */}
+      <div className="flex gap-4 flex-wrap">
+        <select 
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          value={channelFilter}
+          onChange={(e) => setChannelFilter(e.target.value)}
         >
-          <option value="">全部分类</option>
-          <option value="fabric">面料</option>
-          <option value="accessory">辅料</option>
-          <option value="component">组件</option>
-          <option value="other">其他</option>
+          <option value="ALL">全部渠道</option>
+          {channels.map((channel) => (
+            <option key={channel} value={channel}>{channel}</option>
+          ))}
+        </select>
+        <select 
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="ALL">全部状态</option>
+          <option value="ACTIVE">上架</option>
+          <option value="PENDING">待上架</option>
+          <option value="INACTIVE">下架</option>
         </select>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader className="text-blue-600 animate-spin" size={24} />
-            <span className="ml-2 text-gray-600">加载中...</span>
-          </div>
-        ) : error ? (
-          <div className="p-8 text-center">
-            <p className="text-red-600">错误: {error}</p>
-          </div>
-        ) : goods.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-gray-600">暂无数据</p>
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">商品编码</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">商品名称</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">分类</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">供应商</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">单价</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">库存</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {goods.map((item) => (
-                    <tr key={item.id} className="hover:bg-blue-50 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-blue-600">{item.goods_code}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{item.goods_name}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{CATEGORY_LABELS[item.category] || item.category}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{item.supplier}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{item.price}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{item.stock_quantity}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+      {/* 加载状态 */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+          <span className="ml-3 text-gray-500">加载中...</span>
+        </div>
+      )}
 
-            {pagination && pagination.totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between bg-gray-50">
-                <div className="text-sm text-gray-600">
-                  共 <span className="font-semibold">{pagination.total}</span> 条，
-                  第 <span className="font-semibold">{pagination.page}</span> /
-                  <span className="font-semibold">{pagination.totalPages}</span> 页
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setPage(Math.max(1, page - 1))}
-                    disabled={page === 1}
-                    className="flex items-center px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-100"
-                  >
-                    <ChevronLeft size={18} />
-                  </button>
-                  <button
-                    onClick={() => setPage(Math.min(pagination.totalPages, page + 1))}
-                    disabled={page === pagination.totalPages}
-                    className="flex items-center px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-100"
-                  >
-                    <ChevronRight size={18} />
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      {/* 错误状态 */}
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-red-600">加载失败：{error}</p>
+          <button onClick={refetch} className="mt-2 text-sm text-blue-600 hover:underline">
+            重试
+          </button>
+        </div>
+      )}
+
+      {/* 商品列表 */}
+      {!loading && !error && (
+        <div className="rounded-lg border bg-white overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">商品编号</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">商品名称</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">分类</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">渠道</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500 whitespace-nowrap">价格</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">状态</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500 whitespace-nowrap">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredGoods.map((item) => (
+                  <tr key={item.id} className="border-b last:border-0 hover:bg-gray-50">
+                    <td className="px-4 py-3 font-mono text-xs">{item.goods_no}</td>
+                    <td className="px-4 py-3 font-medium">{item.goods_name}</td>
+                    <td className="px-4 py-3 text-xs">{item.category || '-'}</td>
+                    <td className="px-4 py-3 text-xs">{item.channel || '-'}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">¥{item.price.toFixed(2)}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex rounded border px-2 py-0.5 text-xs ${STATUS_CLASS[item.status]}`}>
+                        {STATUS_ZH[item.status]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button className="rounded-md px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50">
+                        查看
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ label, value, highlightColor = 'text-gray-900' }: { label: string; value: number | string; highlightColor?: string }) {
+  return (
+    <div className="rounded-lg border bg-white p-5">
+      <p className="mb-1 text-sm text-gray-500">{label}</p>
+      <p className={`text-2xl font-semibold tabular-nums ${highlightColor}`}>{value}</p>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
-import { MainContent } from './MainContent';
+import { TabManager } from './TabManager';
 import { useAppStore } from '@/lib/store/appStore';
 import { cn } from '@/lib/utils/cn';
 
@@ -14,8 +14,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside
         className={cn(
-          'transition-all duration-200 overflow-hidden',
-          sidebarCollapsed ? 'w-16' : 'w-64'
+          'transition-all duration-200 overflow-hidden flex-shrink-0',
+          sidebarCollapsed ? 'w-16' : 'w-60'
         )}
       >
         <Sidebar />
@@ -24,7 +24,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* 右侧主区域 */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar />
-        <MainContent>{children}</MainContent>
+        <TabManager />
+        <main className="flex-1 min-h-0 overflow-y-auto">
+          <div className="max-w-full p-4 lg:p-6">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );

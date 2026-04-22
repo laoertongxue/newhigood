@@ -79,6 +79,7 @@ CREATE INDEX IF NOT EXISTS idx_production_lines_status ON production_lines(statu
 CREATE INDEX IF NOT EXISTS idx_production_plans_order_id ON production_plans(order_id);
 CREATE INDEX IF NOT EXISTS idx_production_plans_status ON production_plans(status);
 
+
 -- 启用行级安全（RLS）
 ALTER TABLE production_orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE production_lines ENABLE ROW LEVEL SECURITY;
@@ -96,6 +97,17 @@ CREATE POLICY "Enable read for production_lines" ON production_lines
 
 CREATE POLICY "Enable read for production_plans" ON production_plans
   FOR SELECT USING (auth.role() = 'authenticated');
+
+---
+
+## 4️⃣ 创建扩展表（质检、裁剪、入库、PDA）
+
+### 在 Supabase SQL 编辑器中运行 `lib/db/schema-extended.sql`：
+
+扩展表包括：
+- **FCS 扩展**：`fcs_quality_records`、`fcs_cutting_plans`、`fcs_inbound_records`、`fcs_settlement_statements`、`fcs_task_progress`
+- **PCS 扩展**：`pcs_projects`、`pcs_testing_records`、`pcs_sample_records`、`pcs_fabric_records`、`pcs_accessory_records`
+- **PDA 扩展**：`pda_tasks`、`pda_exec_records`、`pda_collect_records`、`pda_notifications`、`pda_export_records`
 ```
 
 ## 4️⃣ 导入示例数据

@@ -1,102 +1,164 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
+import { usePdaExecRecords } from '@/lib/hooks/usePdaRealData';
+import type { PdaExecRecord } from '@/lib/hooks/usePdaRealData';
 
-type ExecTab = 'todo' | 'doing' | 'paused' | 'done';
+const STATUS_ZH: Record<string, string> = {
+  RUNNING: '进行中',
+  PAUSED: '已暂停',
+  COMPLETED: '已完成',
+  CANCELLED: '已取消',
+};
 
-const tabConfig: Array<{ key: ExecTab; label: string }> = [
-  { key: 'todo', label: '未开始' },
-  { key: 'doing', label: '进行中' },
-  { key: 'paused', label: '已暂停' },
-  { key: 'done', label: '已完成' },
-];
-
-const seed = {
-  todo: [
-    { id: 'E-001', name: '运动套装压胶', factory: '华南一厂', progress: '0%' },
-    { id: 'E-002', name: '针织套装锁边', factory: '华南二厂', progress: '0%' },
-  ],
-  doing: [
-    { id: 'E-011', name: '连帽卫衣印花', factory: '苏州协作厂', progress: '67%' },
-  ],
-  paused: [
-    { id: 'E-021', name: '速干短袖后整', factory: '常州工厂', progress: '28%' },
-  ],
-  done: [
-    { id: 'E-099', name: '休闲裤染色', factory: '华南一厂', progress: '100%' },
-  ],
+const STATUS_CLASS: Record<string, string> = {
+  RUNNING: 'bg-blue-50 text-blue-700 border-blue-200',
+  PAUSED: 'bg-amber-50 text-amber-700 border-amber-200',
+  COMPLETED: 'bg-green-50 text-green-700 border-green-200',
+  CANCELLED: 'bg-gray-100 text-gray-500 border-gray-300',
 };
 
 export default function PdaExecPage() {
-  const [tab, setTab] = useState<ExecTab>('todo');
-  const [factory, setFactory] = useState('全部工厂');
-  const [keyword, setKeyword] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
-  const rows = useMemo(() => {
-    return seed[tab].filter((item) => {
-      const byFactory = factory === '全部工厂' || item.factory === factory;
-      const byKeyword = !keyword || `${item.id}${item.name}`.includes(keyword);
-      return byFactory && byKeyword;
-    });
-  }, [tab, factory, keyword]);
+  // 使用真实 API
+  const { records, loading, error, refetch } = usePdaExecRecords();
+
+  const filteredRecords = records.filter((r: PdaExecRecord) => {
+    if (statusFilter !== 'ALL' && r.status !== statusFilter) return false;
+    return true;
+  });
+
+  const stats = {
+    total: records.length,
+    running: records.filter((r: PdaExecRecord) => r.status === 'RUNNING').length,
+    completed: records.filter((r: PdaExecRecord) => r.status === 'COMPLETED').length,
+    totalQty: records.reduce((sum, r: PdaExecRecord) => sum + r.completed_qty, 0),
+    targetQty: records.reduce((sum, r: PdaExecRecord) => sum + r.target_qty, 0),
+  };
 
   return (
-    <div className="space-y-4 p-4 md:p-6 bg-gray-50 min-h-full">
-      <h1 className="text-xl font-semibold text-gray-900">执行看板</h1>
-
-      <div className="rounded-lg border bg-blue-50 px-4 py-3 text-sm text-blue-800">
-        当前可执行任务会按工厂优先级自动排序，可在移动端直接更新进度与异常。
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">执行记录</h1>
+        <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+          新建执行
+        </button>
       </div>
 
-      <section className="rounded-lg border bg-white p-3 grid grid-cols-1 md:grid-cols-3 gap-3">
-        <select className="h-10 rounded-md border px-3 text-sm" value={factory} onChange={(e) => setFactory(e.target.value)}>
-          <option>全部工厂</option>
-          <option>华南一厂</option>
-          <option>华南二厂</option>
-          <option>苏州协作厂</option>
-          <option>常州工厂</option>
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatCard label="执行总数" value={stats.total} />
+        <StatCard label="进行中" value={stats.running} highlightColor="text-blue-600" />
+        <StatCard label="已完成" value={stats.completed} highlightColor="text-green-600" />
+        <StatCard label="完成进度" value={`${Math.round(stats.totalQty / stats.targetQty * 100)}%`} />
+      </div>
+
+      {/* 筛选器 */}
+      <div className="flex gap-4 flex-wrap">
+        <select 
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="ALL">全部状态</option>
+          <option value="RUNNING">进行中</option>
+          <option value="PAUSED">已暂停</option>
+          <option value="COMPLETED">已完成</option>
+          <option value="CANCELLED">已取消</option>
         </select>
-        <input
-          className="h-10 rounded-md border px-3 text-sm md:col-span-2"
-          placeholder="搜索任务编号或任务名"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-        />
-      </section>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        {tabConfig.map((item) => (
-          <button
-            key={item.key}
-            className={`rounded-md border px-3 py-2 text-sm ${tab === item.key ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700'}`}
-            onClick={() => setTab(item.key)}
-          >
-            {item.label}
-          </button>
-        ))}
       </div>
 
-      <section className="space-y-3">
-        {rows.map((item) => (
-          <article key={item.id} className="rounded-lg border bg-white p-4">
-            <div className="flex items-center justify-between">
-              <p className="font-medium text-gray-900">{item.name}</p>
-              <span className="text-xs text-gray-400">{item.id}</span>
-            </div>
-            <div className="mt-2 text-sm text-gray-500">工厂：{item.factory}</div>
-            <div className="mt-3">
-              <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                <span>进度</span>
-                <span>{item.progress}</span>
-              </div>
-              <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
-                <div className="h-full bg-blue-600" style={{ width: item.progress }} />
-              </div>
-            </div>
-          </article>
-        ))}
-        {rows.length === 0 && <div className="rounded-lg border bg-white p-8 text-center text-gray-500">暂无执行任务</div>}
-      </section>
+      {/* 加载状态 */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+          <span className="ml-3 text-gray-500">加载中...</span>
+        </div>
+      )}
+
+      {/* 错误状态 */}
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-red-600">加载失败：{error}</p>
+          <button onClick={refetch} className="mt-2 text-sm text-blue-600 hover:underline">
+            重试
+          </button>
+        </div>
+      )}
+
+      {/* 执行记录列表 */}
+      {!loading && !error && (
+        <div className="rounded-lg border bg-white overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">执行编号</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">任务</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">工人</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">状态</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">开始时间</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">结束时间</th>
+                  <th className="px-4 py-3 text-center font-medium text-gray-500 whitespace-nowrap">完成数量</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500 whitespace-nowrap">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRecords.map((record: PdaExecRecord) => (
+                  <tr key={record.id} className="border-b last:border-0 hover:bg-gray-50">
+                    <td className="px-4 py-3 font-mono text-xs">{record.exec_no}</td>
+                    <td className="px-4 py-3 font-mono text-xs">{record.task_id || '-'}</td>
+                    <td className="px-4 py-3">{record.worker_name}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex rounded border px-2 py-0.5 text-xs ${STATUS_CLASS[record.status]}`}>
+                        {STATUS_ZH[record.status]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs">{record.start_time}</td>
+                    <td className="px-4 py-3 text-xs">{record.end_time || '-'}</td>
+                    <td className="px-4 py-3 text-center">
+                      <span className="tabular-nums">{record.completed_qty}/{record.target_qty}</span>
+                      <div className="w-16 h-1.5 rounded-full bg-gray-200 mt-1 overflow-hidden mx-auto">
+                        <div 
+                          className={`h-full ${record.status === 'COMPLETED' ? 'bg-green-500' : 'bg-blue-500'}`}
+                          style={{ width: `${record.target_qty > 0 ? record.completed_qty / record.target_qty * 100 : 0}%` }}
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button className="rounded-md px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50">
+                        查看
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ 
+  label, 
+  value, 
+  highlight = false, 
+  highlightColor = 'text-gray-900' 
+}: { 
+  label: string; 
+  value: string | number; 
+  highlight?: boolean;
+  highlightColor?: string;
+}) {
+  return (
+    <div className="rounded-lg border bg-white p-5">
+      <p className="mb-1 text-sm text-gray-500">{label}</p>
+      <p className={`text-2xl font-semibold tabular-nums ${highlight ? highlightColor : 'text-gray-900'}`}>
+        {value}
+      </p>
     </div>
   );
 }

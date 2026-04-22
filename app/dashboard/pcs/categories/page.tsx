@@ -1,86 +1,139 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, ChevronLeft, ChevronRight, Loader } from 'lucide-react';
-import { usePcsCategories } from '@/lib/hooks/usePcsResources';
+import { usePcsCategories } from '@/lib/hooks/usePcsRealData';
+
+const STATUS_ZH: Record<string, string> = {
+  ACTIVE: '启用',
+  INACTIVE: '停用',
+};
+
+const STATUS_CLASS: Record<string, string> = {
+  ACTIVE: 'bg-green-50 text-green-700 border-green-200',
+  INACTIVE: 'bg-gray-100 text-gray-500 border-gray-300',
+};
 
 export default function PcsCategoriesPage() {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
-  const { categories, isLoading, error, pagination } = usePcsCategories({
-    page,
-    limit: 20,
-    search: search || undefined,
+  const { categories, loading, error, refetch } = usePcsCategories();
+
+  const filteredCategories = categories.filter((c) => {
+    if (statusFilter !== 'ALL' && c.status !== statusFilter) return false;
+    return true;
   });
 
+  const stats = {
+    total: categories.length,
+    active: categories.filter((c) => c.status === 'ACTIVE').length,
+    level1: categories.filter((c) => c.level === 1).length,
+    level2: categories.filter((c) => c.level === 2).length,
+  };
+
   return (
-    <div className="flex flex-col gap-6 p-6 bg-gray-50 min-h-full">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">分类管理</h1>
-        <p className="text-gray-600 mt-1">维护商品分类编码与名称</p>
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">商品分类</h1>
+        <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+          新增分类
+        </button>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-3 text-gray-400" size={20} />
-        <input
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          placeholder="搜索分类编码或名称..."
-          className="w-full md:w-[420px] pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-        />
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatCard label="分类总数" value={stats.total} />
+        <StatCard label="启用" value={stats.active} highlightColor="text-green-600" />
+        <StatCard label="一级分类" value={stats.level1} />
+        <StatCard label="二级分类" value={stats.level2} />
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader className="text-blue-600 animate-spin" size={24} />
-            <span className="ml-2 text-gray-600">加载中...</span>
-          </div>
-        ) : error ? (
-          <div className="p-8 text-center"><p className="text-red-600">错误: {error}</p></div>
-        ) : categories.length === 0 ? (
-          <div className="p-8 text-center"><p className="text-gray-600">暂无数据</p></div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">分类编码</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">分类名称</th>
+      {/* 筛选器 */}
+      <div className="flex gap-4 flex-wrap">
+        <select 
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="ALL">全部状态</option>
+          <option value="ACTIVE">启用</option>
+          <option value="INACTIVE">停用</option>
+        </select>
+      </div>
+
+      {/* 加载状态 */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+          <span className="ml-3 text-gray-500">加载中...</span>
+        </div>
+      )}
+
+      {/* 错误状态 */}
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-red-600">加载失败：{error}</p>
+          <button onClick={refetch} className="mt-2 text-sm text-blue-600 hover:underline">
+            重试
+          </button>
+        </div>
+      )}
+
+      {/* 分类列表 */}
+      {!loading && !error && (
+        <div className="rounded-lg border bg-white overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">分类编号</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">分类名称</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">层级</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">排序</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">状态</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500 whitespace-nowrap">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCategories.map((category) => (
+                  <tr key={category.id} className="border-b last:border-0 hover:bg-gray-50">
+                    <td className="px-4 py-3 font-mono text-xs">{category.category_no}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <span style={{ paddingLeft: category.level > 1 ? `${(category.level - 1) * 16}px` : '0' }}>
+                        {category.category_name}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex rounded border px-2 py-0.5 text-xs bg-gray-50 border-gray-200">
+                        {category.level === 1 ? '一级' : '二级'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs">{category.sort_order}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex rounded border px-2 py-0.5 text-xs ${STATUS_CLASS[category.status]}`}>
+                        {STATUS_ZH[category.status]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button className="rounded-md px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50">
+                        编辑
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {categories.map((item) => (
-                    <tr key={item.id} className="hover:bg-blue-50 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-blue-600">{item.category_code}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{item.category_name}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
-            {pagination && pagination.totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between bg-gray-50">
-                <div className="text-sm text-gray-600">
-                  共 <span className="font-semibold">{pagination.total}</span> 条，
-                  第 <span className="font-semibold">{pagination.page}</span> /
-                  <span className="font-semibold">{pagination.totalPages}</span> 页
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="flex items-center px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-100"><ChevronLeft size={18} /></button>
-                  <button onClick={() => setPage(Math.min(pagination.totalPages, page + 1))} disabled={page === pagination.totalPages} className="flex items-center px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-100"><ChevronRight size={18} /></button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+function StatCard({ label, value, highlightColor = 'text-gray-900' }: { label: string; value: number; highlightColor?: string }) {
+  return (
+    <div className="rounded-lg border bg-white p-5">
+      <p className="mb-1 text-sm text-gray-500">{label}</p>
+      <p className={`text-2xl font-semibold tabular-nums ${highlightColor}`}>{value}</p>
     </div>
   );
 }
