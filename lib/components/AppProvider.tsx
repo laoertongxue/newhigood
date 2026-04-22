@@ -1,21 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useSession } from '@/lib/hooks/useSession';
+import { ReactNode } from 'react';
 
 /**
- * App provider component for initializing session on mount
+ * App provider component - simplified version
  */
-export function AppProvider({ children }: { children: React.ReactNode }) {
-  const { isLoading } = useSession();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-600">加载中...</div>
-      </div>
-    );
-  }
-
+export function AppProvider({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
