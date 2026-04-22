@@ -1,48 +1,35 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { getAuthUserFromRequest, updateSession } from '@/lib/db/supabase-server';
 
 /**
- * Middleware for session refresh and route protection
+ * Middleware for route protection
+ * Simplified version for Edge Runtime compatibility
  */
 export async function middleware(request: NextRequest) {
-  // Refresh session
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
-
-  try {
-    response = await updateSession(request);
-  } catch (e) {
-    // Continue without session update if it fails
-  }
-
   const { pathname } = request.nextUrl;
 
-  const { user } = await getAuthUserFromRequest(request);
-  const isAuthenticated = Boolean(user);
+  // Get auth cookie
+  const authCookie = request.cookies.get('sb-access-token');
 
   // Redirect unauthenticated users trying to access protected routes
-  if (!isAuthenticated && pathname.startsWith('/dashboard')) {
+  if (!authCookie && pathname.startsWith('/dashboard')) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
   // Redirect authenticated users trying to access auth pages
-  if (isAuthenticated && (pathname === '/auth/login' || pathname === '/auth/signup')) {
+  if (authCookie && (pathname === '/auth/login' || pathname === '/auth/signup')) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   // Redirect root to dashboard if authenticated, otherwise to login
   if (pathname === '/') {
-    if (isAuthenticated) {
+    if (authCookie) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     } else {
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
